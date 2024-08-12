@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 ## import libraries and packages
 import numpy as np
 import matplotlib.pyplot as plt
@@ -87,7 +81,7 @@ class Space_Analysis:
     ## create dataset
     #######################################################
     def create_dataset(self):
-        """Creates a dataset with dict format. dict->{index,dataframe,dict_of_variables}"""
+        """Creates a dataset with dict format. dict->{index,dataframe,dict_of_variables"""
         dataset = dict()
         archive_path, archive_names = self.get_csv_files() ##gets paths and names
         index = 0
