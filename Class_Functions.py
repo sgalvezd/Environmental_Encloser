@@ -13,7 +13,7 @@ from matplotlib.path import Path
 import re
 import os
 import glob
-
+    
 class Space_Analysis:
     """Class for upload, clean and plot dataset from different .csv archives, which resulted
     from numerical simualtions"""
@@ -81,7 +81,7 @@ class Space_Analysis:
     ## create dataset
     #######################################################
     def create_dataset(self):
-        """Creates a dataset with dict format. dict->{index,dataframe,dict_of_variables"""
+        """Creates a dataset with dict format. dict->{index,dataframe,dict_of_variables}"""
         dataset = dict()
         archive_path, archive_names = self.get_csv_files() ##gets paths and names
         index = 0
@@ -195,6 +195,7 @@ class Space_Analysis:
                 axes[row,col].set_yscale("log")
             if xlog:
                 axes[row,col].set_xscale("log")
+        plt.grid(True)
         fig.suptitle(f'Histograms of flow & mesh properties, CASE {self.archive}', fontsize=18,y=1.01)
         plt.tight_layout()
         plt.show()
@@ -212,6 +213,7 @@ class Space_Analysis:
             plt.yscale("log")
         if xlog:
             plt.xscale("log")
+        plt.grid(True)
         plt.title(variable+" "+self.variable_dict[variable][1]+f", CASE {self.archive}",fontsize=18)
         plt.tight_layout()
         plt.show()
@@ -255,7 +257,7 @@ class Space_Analysis:
             b = 18.678
             c = 257.14 #°C
             Psat = a*np.exp(b*temperature_Celsius/(c+temperature_Celsius))
-            RH = mass_fraction*pressure_absolute/(Psat*0.622) ### flag_change
+            RH = mass_fraction*pressure_absolute/(Psat*0.622) ### changed
         else: ##
             RH = RH/100
         for i in range(len(RH)): ##maximum RH=1
@@ -857,16 +859,16 @@ class Space_Analysis:
         fig.suptitle('Surface Plots for '+variable+unit+f", CASE {self.archive}", fontsize=18,y=1.025)
         plt.show()
 
-
-# In[1]:
-
+#############################################################################################
+#############################################################################################
+#############################################################################################
 
 class Time_Analysis:
     """Class for upload text files that contain the time variation of certain variables
     resulting from different simulations"""
     ## folder location
-    PATH = r'E:\Encloser_CFD_Simulations'
-    Folder = r'Design_01'
+    PATH = r"C:\Users\sebas\Desktop\SAPHIR"
+    Folder = ""
     ## jump rows where there is no relevant information
     skiprows = 2
     ## dataset
@@ -895,12 +897,12 @@ class Time_Analysis:
     def get_out_files(self):
         """Creates a list of all out files (text files) which fullfills the pattern conditions
         of the archives corresponding the simulations' results"""
-        search_pattern = os.path.join(r"E:\Encloser_CFD_Simulations", '**', f'*.out')
+        search_pattern = os.path.join(self.PATH, '**', f'*.out')
         all_paths = glob.glob(search_pattern, recursive=True)
         out_path = []
         out_name = []
         for path in all_paths:
-            if "Design_" in path.split("\\")[-2]: #filters specific archives
+            if "Time_" in path.split("\\")[-1]: #filters specific archives
                 out_path.append(path) ##adds path
                 name_aux = path.split("\\")[-1].split(".")[0].split("_") 
                 out_name.append(name_aux[1]+"_"+name_aux[-1]) #creates new name for archive
@@ -1134,11 +1136,11 @@ class Time_Analysis:
                 axes[row,col].set_xlabel("Time [s]")
                 axes[row,col].set_xlim(min(t),max(t))
                 axes[row,col].legend(loc=legend_loc)
+                axes[row,col].grid(True)
             index = index+1
         ## plot kwargs
         fig.suptitle('Time Evolution of Variables'+f", CASE {self.archive}", fontsize=18,y=1)
         plt.tight_layout()
-        plt.grid(True)
         plt.show()
     #############################################################################################################################################
     ## plot mass fraction of h2o ################################################################################################################
@@ -1165,12 +1167,6 @@ class Time_Analysis:
             plt.xscale("log")
         if ylog:
             plt.yscale("log")
+        plt.grid(True)
         plt.legend(loc=location,fontsize=12)
         plt.show()
-
-
-# In[ ]:
-
-
-
-
