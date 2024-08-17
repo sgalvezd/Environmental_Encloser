@@ -48,9 +48,7 @@ class Space_Analysis:
 
     ## color maps
     colormaps = list(plt.colormaps())
-    #######################################################
-    ## set dataframe and variable dictionary
-    #######################################################
+    ##############################################################################################################
     def set_dataframe(self,archive):
         """uploads dataframe from a single archive of the dataset"""
         self.dataframe = self.dataset[archive][1]
@@ -60,9 +58,7 @@ class Space_Analysis:
         print("functions: plot_histograms,plot_histogram,plot_velocityfield,plot_max_regions,plot,plot_layers")
         print(self.variable_dict.keys())
         return
-    #######################################################
-    ## get all csv docs
-    #######################################################
+    ##############################################################################################################
     def get_csv_files(self):
         """Creates a list of all archives in a Folder that fullfills the pattern of
         the archives that hold the database of a single simulation mesh values"""
@@ -70,16 +66,14 @@ class Space_Analysis:
         all_paths = glob.glob(search_pattern, recursive=True) ##list of all paths for each archive
         csv_path = [] ## path of csv
         csv_name = [] ## name of csv
-        #######################################################
+        ##
         for path in all_paths: ## call all archives
             if re.match(r"Mesh_D\d\d_T\d.csv",path.split("\\")[-1]):
                 csv_path.append(path)
                 name_aux = path.split("\\")[-1].split(".")[0].split("_") ##new format name
                 csv_name.append(name_aux[1]+"_"+name_aux[-1]) ##
         return csv_path, csv_name
-    #######################################################
-    ## create dataset
-    #######################################################
+    ##############################################################################################################
     def create_dataset(self):
         """Creates a dataset with dict format. dict->{index,dataframe,dict_of_variables}"""
         dataset = dict()
@@ -93,9 +87,7 @@ class Space_Analysis:
         print("Names of read archives")
         print(dataset.keys())
         return dataset
-    #######################################################
-    ## clean dataframe for 0 density and relative humidity
-    #######################################################
+    ##############################################################################################################
     def clean_zeros(self,dataframe,var_dict):
         """filters values of a dataframe where density, relative humidity and pressure are 0"""
         density = dataframe[:,var_dict["density"][0]] ##density vector
@@ -112,9 +104,7 @@ class Space_Analysis:
         for j in range(len(dataframe[0,:])):
             new_dataframe[:,j] = dataframe[indices,j] ##add filtered values 
         return new_dataframe
-    #######################################################
-    ## read document of mesh
-    #######################################################
+    ##############################################################################################################
     def read_data(self,archive_PATH=""):
         """reads csv archive (single simulation mesh) cleans data, creates dataframe and
         variable dictionary"""
@@ -144,12 +134,12 @@ class Space_Analysis:
         new_dataframe = np.zeros((rows,cols+1))
         for col in range(cols):
             new_dataframe[:,col]=df[:,col]
-    ## search temperature and mass fraction ######################################################################################
+    ##search temperature and mass fraction 
         temperature = new_dataframe[:,variable_dict["temperature"][0]]
         pressure = new_dataframe[:,variable_dict["pressure"][0]]
         mass_fraction = new_dataframe[:,variable_dict["h2o"][0]]
         new_dataframe[:,-1] = self.dew_point(temperature,pressure,mass_fraction)
-    ## re-shaping  ######################################################################################
+    ## re-shaping
         if new_dataframe.shape[1]!=len(variable_dict):
             dataframe = np.zeros((rows,len(variable_dict)))
             list_keys = list(variable_dict.keys())
@@ -160,7 +150,7 @@ class Space_Analysis:
             dataframe[:,-1] = new_dataframe[:,-1]
         else:
             dataframe = new_dataframe
-    ### adjust to center ######################################################################################
+    ### adjust to center
         for i in ["x","y","z"]:
             max_val = max(dataframe[:,variable_dict[i][0]])
             min_val = min(dataframe[:,variable_dict[i][0]])
@@ -168,58 +158,7 @@ class Space_Analysis:
             dataframe[:,variable_dict[i][0]] = dataframe[:,variable_dict[i][0]]-mid_val
         print("%s: rows = %d, cols = %d"%(archive_PATH.split("\\")[-1].split(".")[0].replace("Mesh_",""),dataframe.shape[0],dataframe.shape[1]))
         return dataframe, variable_dict
-    #############################################################################################################################################
-    ## plot histograms ##########################################################################################################################
-    #############################################################################################################################################
-    def plot_histograms(self,bins=100,density=True,xlog=False,ylog=False):
-        """Function that plots histograms of all variables"""
-        print("kwargs: bins[int],density[boolean],xlog[boolean],ylog[boolean]")
-        variables = list(self.variable_dict)
-        n = len(variables)
-        ## calculate number of rows (3 columns plot)
-        if n//3<n/3:
-            plot_rows = n//3+1
-        else:
-            plot_rows = n//3
-        ## set the plot matrix
-        fig, axes = plt.subplots(plot_rows,3, figsize=(15, 20))
-        for i in range(1,n-1):##eliminating cellnumber
-            var = self.dataframe[:,i]
-            row = (i-4)//3+1 ## changes rows from 0 to 2
-            col = (i-4)%3 ## changes col every 3 rows
-            axes[row,col].hist(var,bins=bins,density=density) ##plot histogram
-            ## add title accroding to variable
-            axes[row,col].set_title(variables[i]+" "+self.variable_dict[variables[i]][1],fontsize=12)
-            ## option for log scale
-            if ylog:
-                axes[row,col].set_yscale("log")
-            if xlog:
-                axes[row,col].set_xscale("log")
-        plt.grid(True)
-        fig.suptitle(f'Histograms of flow & mesh properties, CASE {self.archive}', fontsize=18,y=1.01)
-        plt.tight_layout()
-        plt.show()
-    #############################################################################################################################################
-    ## plot histogram for 1 variable ############################################################################################################
-    #############################################################################################################################################
-    def plot_histogram(self,variable,bins=100,density=True,xlog=False,ylog=False):
-        """plot single variable histogram"""
-        print("kwargs:variable[str],bins[int],density[boolean],xlog[boolean],ylog[boolean]")
-        fig = plt.figure(figsize=(10, 8))
-        if len(variable)==0:
-            raise ValueError("Choose variable from:",self.variable_dict.keys())
-        plt.hist(self.dataframe[:,self.variable_dict[variable][0]],bins=bins,density=density)
-        if ylog:
-            plt.yscale("log")
-        if xlog:
-            plt.xscale("log")
-        plt.grid(True)
-        plt.title(variable+" "+self.variable_dict[variable][1]+f", CASE {self.archive}",fontsize=18)
-        plt.tight_layout()
-        plt.show()
-    #############################################################################################################################################
-    ## clean document of mesh ###################################################################################################################
-    #############################################################################################################################################
+    ##############################################################################################################
     @staticmethod
     def data_clean(dataframe):
         """Cleans string data and nan data turning it to 0 or float"""
@@ -237,9 +176,15 @@ class Space_Analysis:
                 else:
                     raise ValueError(f"Unknown variable in {i},{j}: {dataframe[i,j]}")
         return new_dataframe
-    #############################################################################################################################################
-    ## dew point function #######################################################################################################################
-    #############################################################################################################################################
+    ##############################################################################################################
+    @staticmethod
+    def clean_name(name):
+        """reformats name of variables"""
+        new_name = name.replace(' ',"").replace('-',' ').replace('coordinate','').replace('magnitude','').replace('mag','')
+        if new_name[-1]==' ':
+            new_name = new_name[:-1]
+        return new_name
+   ##############################################################################################################
     @staticmethod
     def dew_point(temperature,pressure,mass_fraction,RH=[]):
         """calculates dew point using T,P,w or RH and T"""
@@ -272,19 +217,56 @@ class Space_Analysis:
                 gamma_factor[i] = 100*b/(100-c)
         Tdew = c*gamma_factor/(b-gamma_factor)
         return Tdew
-    #############################################################################################################################################
-    ## clean name and unit ######################################################################################################################
-    #############################################################################################################################################
-    @staticmethod
-    def clean_name(name):
-        """reformats name of variables"""
-        new_name = name.replace(' ',"").replace('-',' ').replace('coordinate','').replace('magnitude','').replace('mag','')
-        if new_name[-1]==' ':
-            new_name = new_name[:-1]
-        return new_name
-    #############################################################################################################################################
-    ## condition handling #######################################################################################################################
-    #############################################################################################################################################
+        
+    #######################################################
+    ## plot functions
+    #######################################################
+    
+    def plot_histograms(self,bins=100,density=True,xlog=False,ylog=False):
+        """Function that plots histograms of all variables"""
+        print("kwargs: bins[int],density[boolean],xlog[boolean],ylog[boolean]")
+        variables = list(self.variable_dict)
+        n = len(variables)
+        ## calculate number of rows (3 columns plot)
+        if n//3<n/3:
+            plot_rows = n//3+1
+        else:
+            plot_rows = n//3
+        ## set the plot matrix
+        fig, axes = plt.subplots(plot_rows,3, figsize=(15, 20))
+        for i in range(1,n-1):##eliminating cellnumber
+            var = self.dataframe[:,i]
+            row = (i-4)//3+1 ## changes rows from 0 to 2
+            col = (i-4)%3 ## changes col every 3 rows
+            axes[row,col].hist(var,bins=bins,density=density) ##plot histogram
+            ## add title accroding to variable
+            axes[row,col].set_title(variables[i]+" "+self.variable_dict[variables[i]][1],fontsize=12)
+            ## option for log scale
+            if ylog:
+                axes[row,col].set_yscale("log")
+            if xlog:
+                axes[row,col].set_xscale("log")
+        plt.grid(True)
+        fig.suptitle(f'Histograms of flow & mesh properties, CASE {self.archive}', fontsize=18,y=1.01)
+        plt.tight_layout()
+        plt.show()
+    #######################################################
+    def plot_histogram(self,variable,bins=100,density=True,xlog=False,ylog=False):
+        """plot single variable histogram"""
+        print("kwargs:variable[str],bins[int],density[boolean],xlog[boolean],ylog[boolean]")
+        fig = plt.figure(figsize=(10, 8))
+        if len(variable)==0:
+            raise ValueError("Choose variable from:",self.variable_dict.keys())
+        plt.hist(self.dataframe[:,self.variable_dict[variable][0]],bins=bins,density=density)
+        if ylog:
+            plt.yscale("log")
+        if xlog:
+            plt.xscale("log")
+        plt.grid(True)
+        plt.title(variable+" "+self.variable_dict[variable][1]+f", CASE {self.archive}",fontsize=18)
+        plt.tight_layout()
+        plt.show()
+    #######################################################
     @staticmethod
     def filter_by_condition(condition,data_vector,variable,unit):
         """Function for filter a varaible by putting a range like A1<variable<A2,
@@ -340,9 +322,7 @@ class Space_Analysis:
                 raise ValueError("'<' and '<' absent in condition")
         else:
             raise ValueError("Formats are '>number'/'<number' or '<upper&>lower'/'>lower&<upper'")
-    #############################################################################################################################################
-    ## regions max values #######################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     ##find the index of the max value
     @staticmethod
     def get_max_index(array,index_list):
@@ -352,6 +332,7 @@ class Space_Analysis:
             if array[index]>array[max_index]: ##condition of greater value found
                 max_index = index
         return max_index
+    #######################################################
     ##get the indices within and outside of length (in 3 directions)
     @staticmethod
     def get_region(x,y,z,length,index_list,max_index):
@@ -375,6 +356,7 @@ class Space_Analysis:
         if len(indices)+len(not_indices)!=len(index_list):
             raise ValueError("Mising indices, len(indices)+len(not indices)!=len(index list)")
         return indices,not_indices
+    #######################################################
     ## get the list of indices of max regions #length in [m]
     def regions_max_values(self,x,y,z,v,length=0.2,n_regions=3):
         """generates a list of indices for a number of regions where a max value is found"""
@@ -390,9 +372,7 @@ class Space_Analysis:
             indices,not_indices = self.get_region(x,y,z,length,not_indices,max_index)
             zones.append(indices)
         return zones
-    #############################################################################################################################################
-    ## Filter values by surface #################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     @staticmethod
     def get_surface(x,y,z,plane,value,e=1e-2):
         """creates a surface slice of the volumen. Where it takes a set of points around a
@@ -414,13 +394,11 @@ class Space_Analysis:
                 indices.append(index)
             index = index+1
         return indices
-    #############################################################################################################################################
-    ## Plot Mesh ################################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     @staticmethod
     def plot_mesh(ax):
         """plot the physical space where the simulation was performed"""
-        ### mesh plot ##########################################################################################################################
+        ### mesh plot #######################################################
         ## face z-
         f1x = [-0.85,0.85,0.85,0.36,-0.36,-0.85,-0.85]
         f1y = [-0.9,-0.9,0.4,0.9,0.9,0.4,-0.9]
@@ -444,9 +422,7 @@ class Space_Analysis:
         ax.plot3D([-0.85,-0.85],[5,-5],[0.4,0.4],'-k',lw=1)
         ax.plot3D([-0.36,-0.36],[5,-5],[0.9,0.9],'-k',lw=1)
         ax.plot3D([0.36,0.36],[5,-5],[0.9,0.9],'-k',lw=1)
-    #############################################################################################################################################
-    ## Plot quiver ##############################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def plot_velocityfield(self,nsteps=100,length=0.2,nlevels=10,normalize=True,linewidth=0.3,colormap='jet'):
         print("kwargs:nsteps[int],length[float],nlevels[int],normalize[boolean],linewidth[float],colormap[str]")
         fig = plt.figure(figsize=(self.x_size, self.y_size))
@@ -459,9 +435,9 @@ class Space_Analysis:
         v = self.dataframe[::nsteps,self.variable_dict["y velocity"][0]]
         w = self.dataframe[::nsteps,self.variable_dict["z velocity"][0]]
         vel = self.dataframe[::nsteps,self.variable_dict["velocity"][0]]
-        ### mesh plot ##########################################################################################################################
+        ### mesh plot #######################################################
         self.plot_mesh(ax=ax)
-        ## create color ###################################################################################################################
+        ## create color #######################################################
         cmap = plt.get_cmap(colormap)
         color = cmap(vel)
         ## quiver plot
@@ -491,9 +467,7 @@ class Space_Analysis:
         #if self.save_plot:
         #    plt.savefig('images/'+name_variable+'.pdf',bbox_inches='tight')
         plt.show()
-    #############################################################################################################################################
-    ## Plot max regions #########################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def plot_max_regions(self,variable,n_regions=3,length=0.2,nlevels=10,normalize=True,linewidth=0.3,
                          colormap='jet',save=save_plot,scatter_size=0.2):
         """Function that plots n_region number of regions where a maximum value of a varaible is found"""
@@ -509,7 +483,7 @@ class Space_Analysis:
         unit = self.variable_dict[variable][1]
         ## get regions
         zones = self.regions_max_values(x,y,z,var,length=length,n_regions=n_regions)
-        ### mesh plot ##########################################################################################################################
+        ### mesh plot #######################################################
         self.plot_mesh(ax=ax)
         ## scatter plot
         for region in range(len(zones)):
@@ -519,7 +493,7 @@ class Space_Analysis:
         boundaries = np.linspace(min(var),max(var),nlevels)
         cb = fig.colorbar(scatterplot,shrink=0.8,ax=ax,boundaries=boundaries,
                   label=variable+" "+unit,location="bottom",pad=0)
-        ### kwargs for plot ######################################################################################################################
+        ### kwargs for plot #######################################################
         ax.set_xlabel('X [m]',fontsize=18,color='red',rotation=45,labelpad=10)
         ax.set_ylabel('Z [m]',fontsize=18,color='red',rotation=15,labelpad=30)
         ax.set_zlabel('Y [m]',fontsize=18,color='red',labelpad=5)
@@ -538,19 +512,17 @@ class Space_Analysis:
         #if save:
         #    plt.savefig('images/'+name_variable+'.pdf',bbox_inches='tight')
         plt.show()
-    #############################################################################################################################################
-    ## Plot Function: mesh, variable, filtered variable #########################################################################################
-    #############################################################################################################################################
+    #######################################################
     def plot(self,variable="",condition="",colormap="viridis",nlevels=10,scatter_size=0.2):
         """Plots a variable with or without a filter (range, greater or less than a value)"""
         print("kwargs: variable[str],condition[str],mesh[boolean],save[boolean],colormap[str],nlevels[int],scatter_size[float]")
         fig = plt.figure(figsize=(self.x_size, self.y_size))
         ax = fig.add_subplot(111, projection='3d')
-        ### mesh plot ##########################################################################################################################
+        ### mesh plot #######################################################
         if self.mesh_plot:
             self.plot_mesh(ax=ax)
             plot_title = "Physical Domain"
-        ### single variable plot ###############################################################################################################
+        ### single variable plot #######################################################
         if len(variable)>0 and len(condition)==0:
             ## extract data to plot
             x = self.dataframe[:,self.variable_dict["x"][0]]
@@ -568,7 +540,7 @@ class Space_Analysis:
                 tick.set_rotation(30)
                 tick.set_fontsize(15)
             plot_title = "Plot of "+variable+" "+unit
-        ### filtered variable plot #############################################################################################################
+        ### filtered variable plot #######################################################
         if len(variable)>0 and len(condition)>0:
             ## extract data to plot
             var = self.dataframe[:,self.variable_dict[variable][0]]
@@ -593,7 +565,7 @@ class Space_Analysis:
                 tick.set_rotation(30)
                 tick.set_fontsize(15)
         
-        ### kwargs for plot ####################################################################################################################
+        ### kwargs for plot #######################################################
         ax.set_xlabel('X [m]',fontsize=18,color='red',rotation=45,labelpad=10)
         ax.set_ylabel('Z [m]',fontsize=18,color='red',rotation=15,labelpad=30)
         ax.set_zlabel('Y [m]',fontsize=18,color='red',labelpad=5)
@@ -612,9 +584,7 @@ class Space_Analysis:
         #if save:
         #    plt.savefig('images/'+name_variable+'.pdf',bbox_inches='tight')
         plt.show()
-    #############################################################################################################################################
-    ## Plot Layer ###############################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def plot_layer(self,variable,plane="z",value=0,ylog=False,xlog=False,colormap='viridis',delta=1e-2,N=100,
                     aspect_ratioYZ=0.4,aspect_ratioZX=0.4,nbound=6,shrink_factor=1,xysize=[10,8]):
         """Plots a surface (planes X,Y or Z) of a variable"""
@@ -628,13 +598,13 @@ class Space_Analysis:
         unit = self.variable_dict[variable][1]
         ## get surface values
         indices = self.get_surface(x,y,z,plane,value,e=delta)
-        ##plot  ##############################################################################################################################
+        ##plot  #######################################################
         if len(xysize)==2:
             fig = plt.subplots(1,1, figsize=(xysize[0], xysize[1]))
         else:
             fig = plt.subplots(1,1, figsize=(self.x_size, self.y_size))
         ax = plt.gca()
-        ## z-plane ############################################################################################################################
+        ## z-plane #######################################################
         if "z" in plane.lower():
             ##data interpolation
             xi = np.linspace(min(x[indices]), max(x[indices]), N)
@@ -659,7 +629,7 @@ class Space_Analysis:
             plt.ylabel("Y")
             aspect_ratio = (max(y[indices])-min(y[indices]))/(max(x[indices])-min(x[indices]))
             ax.set_aspect(aspect_ratio)
-        ## y-plane ############################################################################################################################
+        ## y-plane #######################################################
         elif "y" in plane.lower():
             ##data interpolation
             xi = np.linspace(min(x[indices]), max(x[indices]), N)
@@ -680,7 +650,7 @@ class Space_Analysis:
             plt.xlabel("X")
             plt.ylabel("Z")
             ax.set_aspect(aspect_ratioZX)
-        ## x-plane ############################################################################################################################
+        ## x-plane #######################################################
         elif "x" in plane.lower():
             ##data interpolation
             zi = np.linspace(min(z[indices]), max(z[indices]), N)
@@ -712,9 +682,7 @@ class Space_Analysis:
         plt.title(f"Surface Plot {plane}={value}, "+variable+unit+f", CASE {self.archive}", fontsize=16)
         #fig.suptitle('Surface Plots for '+variable+unit+f", CASE {self.archive}", fontsize=18,y=1.025)
         plt.show()
-    #############################################################################################################################################
-    ## Plot Layers ##############################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def plot_layers(self,variable="",plane_dict={},ylog=False,xlog=False,colormap='viridis',delta=1e-2,N=100,
                     aspect_ratioYZ=0.4,aspect_ratioZX=0.4,nbound=6,shrink_factor=1):
         """plots a set of surfaces (X, Y or Z) of a variable, uses interpolation"""
@@ -723,7 +691,7 @@ class Space_Analysis:
         ### create default dictionary with values of planes
         if len(plane_dict)==0:
             plane_dict = self.planes_dictionary
-        ## recognize variable ##################################################################################################################
+        ## recognize variable #######################################################
         if len(variable)==0:
             print("Choose Variable")
             variable = str(input())
@@ -749,8 +717,8 @@ class Space_Analysis:
         ## get surface values
         for plane in list(plane_dict.keys()):
             plane_indices.append(self.get_surface(x,y,z,plane,plane_dict[plane],e=delta))
-        ##plot  ##############################################################################################################################
-        ## prepare plot in 3 columns #########################################################################################################
+        ##plot  #######################################################
+        ## prepare plot in 3 columns 
         n = len(plane_indices)
         planes = list(plane_dict.keys())
         if n//3<n/3:
@@ -798,7 +766,7 @@ class Space_Analysis:
                 axes[row,col].set_ylabel("Y")
                 aspect_ratio = (max(y[indices])-min(y[indices]))/(max(x[indices])-min(x[indices]))
                 axes[row, col].set_aspect(aspect_ratio)
-            ## y-plane ############################################################################################################################
+            ## y-plane #######################################################
             elif "y" in plane.lower():
                 ##data interpolation
                 xi = np.linspace(min(x[indices]), max(x[indices]), N)
@@ -880,9 +848,7 @@ class Time_Analysis:
     ## plot parameters
     x_size = 10
     y_size = 8
-    #############################################################################################################################################
-    ## set dataframe ############################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def set_dataframe(self,archive):
         """uploads information from a single datafram of the dataset"""
         self.dataframe = self.dataset[archive][1]
@@ -890,10 +856,7 @@ class Time_Analysis:
         self.archive = archive
         print(self.headers)
         return
-    
-    #############################################################################################################################################
-    ## list out files ###########################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def get_out_files(self):
         """Creates a list of all out files (text files) which fullfills the pattern conditions
         of the archives corresponding the simulations' results"""
@@ -907,9 +870,7 @@ class Time_Analysis:
                 name_aux = path.split("\\")[-1].split(".")[0].split("_") 
                 out_name.append(name_aux[1]+"_"+name_aux[-1]) #creates new name for archive
         return out_path, out_name
-    #############################################################################################################################################
-    ## create dataset ###########################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def create_dataset(self):
         """Creates dataset from .out files"""
         dataset = dict()
@@ -922,9 +883,7 @@ class Time_Analysis:
         print("List read out files")
         print(dataset.keys())
         return dataset
-    #############################################################################################################################################
-    ## read out file ############################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def read_data(self,archive_PATH=""):
         """creates dataframe from archive, and adds dew point variable"""
         if len(archive_PATH)==0:
@@ -961,9 +920,7 @@ class Time_Analysis:
         
         #print(variables_dict.keys())
         return new_dataframe,headers
-    #############################################################################################################################################
-    ## read .out file ###########################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     ## get the headers of the archive
     @staticmethod
     def get_headers(archive,skiprows):
@@ -985,9 +942,7 @@ class Time_Analysis:
         if dataframe.shape[1]!=len(headers): #check if dimensions are equal
             raise ValueError("Columns of dataframe are not equal to number of headers")
         return dataframe,headers
-    #############################################################################################################################################
-    ##get timeflow variable #####################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     @staticmethod
     def get_timeflow(dataframe,headers):
         """finds the time variable vector"""
@@ -1005,9 +960,7 @@ class Time_Analysis:
             print(headers)
             raise ValueError("No flow-time variable found")
         return t
-    #############################################################################################################################################
-    ##get variable and state: min mean or max ###################################################################################################
-    #############################################################################################################################################
+    #######################################################
     @staticmethod
     def get_variable(dataframe,header,variable,state):
         """identifies max, min or mean for a variable and checks if there is only 1 
@@ -1024,9 +977,7 @@ class Time_Analysis:
         elif count==0:#check
             raise ValueError("No variable found")
         return var
-    #############################################################################################################################################
-    ## gets the index of variable max,min,mean ##################################################################################################
-    #############################################################################################################################################
+    #######################################################
     @staticmethod
     def get_variable_index(headers,variables_dict,variable='',position=''):
         """Gets indices of variable"""
@@ -1060,9 +1011,7 @@ class Time_Analysis:
                 return index
             index = index+1
         raise ValueError(f"Index of {variable}-{position} not found")
-    #############################################################################################################################################
-    ## plot variable in time ####################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def plot(self,xlogscale=[False,False,False,False],ylogscale=[False,False,False,False],
              line_width=0.1,marker_size=2,legend_loc=1):
         """plot of mean,max min for each variable in time"""
@@ -1142,9 +1091,7 @@ class Time_Analysis:
         fig.suptitle('Time Evolution of Variables'+f", CASE {self.archive}", fontsize=18,y=1)
         plt.tight_layout()
         plt.show()
-    #############################################################################################################################################
-    ## plot mass fraction of h2o ################################################################################################################
-    #############################################################################################################################################
+    #######################################################
     def plot_h2o(self,exception=[],xlog=False,ylog=False,location=1,line_width=1):
         """plot the mass fraction variation in time and adds a tau variable for choosing best option"""
         files = list(self.dataset.keys())
